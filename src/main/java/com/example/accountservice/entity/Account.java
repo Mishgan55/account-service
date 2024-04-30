@@ -4,16 +4,14 @@ import com.example.accountservice.utill.enums.Currency;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
 @RequiredArgsConstructor
-@ToString
-@EqualsAndHashCode
 @Table(name = "accounts")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Account {
     @Id
     @Column(name = "id")

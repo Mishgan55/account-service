@@ -2,12 +2,10 @@ package com.example.accountservice.dto;
 
 import com.example.accountservice.utill.enums.Currency;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import java.math.BigDecimal;
 
-@ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class AccountDto {
     private Long userId;
     private BigDecimal balance;

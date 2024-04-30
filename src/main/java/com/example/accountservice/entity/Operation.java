@@ -3,15 +3,13 @@ package com.example.accountservice.entity;
 import com.example.accountservice.utill.enums.OperationType;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@ToString
-@EqualsAndHashCode
 @Table(name = "operations")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Operation {
     @Id
     @Column(name = "id")

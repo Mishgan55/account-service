@@ -3,14 +3,12 @@ package com.example.accountservice.entity;
 import com.example.accountservice.utill.enums.DocumentType;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import java.util.List;
 
 @Entity
-@ToString
-@EqualsAndHashCode
 @Table(name = "users")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
     @Id
     @Column(name = "id")

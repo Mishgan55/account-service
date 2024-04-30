@@ -2,10 +2,8 @@ package com.example.accountservice.dto;
 
 import com.example.accountservice.utill.enums.DocumentType;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
-@ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class UserDto {
     private String name;
     private String documentNumber;

@@ -6,10 +6,9 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@ToString
-@EqualsAndHashCode
 @AllArgsConstructor
 @RequiredArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class OperationDto {
     private Long accountId;
     private OperationType operationType;
