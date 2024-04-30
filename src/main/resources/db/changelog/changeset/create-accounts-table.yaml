@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-accounts
+      author: Mikhail
+      changes:
+        - createTable:
+            tableName: accounts
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_users_accounts
+                    references: users(id)
+              - column:
+                  name: balance
+                  type: numeric
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(10)
+                  constraints:
+                    nullable: false

@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-operations
+      author: Mikhail
+      changes:
+        - createTable:
+            tableName: operations
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: account_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_operations_accounts
+                    references: accounts(id)
+              - column:
+                  name: operation_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: numeric
+                  constraints:
+                    nullable: false
+              - column:
+                  name: timestamp
+                  type: timestamp
+                  constraints:
+                    nullable: false

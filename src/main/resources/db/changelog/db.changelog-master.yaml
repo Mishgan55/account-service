@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changeset/create-users-table.yaml
+  - include:
+      file: db/changelog/changeset/create-accounts-table.yaml
+  - include:
+      file: db/changelog/changeset/create-operations-table.yaml
+  - include:
+      file: db/changelog/changeset/update-accounts-table.yaml
+  - include:
+      file: db/changelog/changeset/update2-accounts-table.yaml

@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: modify-balance-column
+      author: Mikhail
+      changes:
+        - modifyDataType:
+            tableName: accounts
+            columnName: balance
+            newDataType: numeric(15,2)
+
