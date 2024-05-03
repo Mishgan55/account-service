@@ -15,11 +15,11 @@ public interface AccountService {
 
     List<AccountDto> getAllAccounts();
 
-    void updateAccount(AccountDto accountDto, Long id);
+    AccountDto updateAccount(AccountDto accountDto, Long id);
 
     void deleteAccount(Long id);
 
-    void createAccount(AccountDto accountDto);
+    AccountDto createAccount(AccountDto accountDto);
 
     List<AccountDto> getAccountsByUserId(Long userId);
 

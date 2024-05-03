@@ -7,11 +7,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,8 +27,9 @@ public class OperationController {
             @Content(mediaType = "application/json", schema = @Schema(implementation = OperationDto.class))
     })
     @GetMapping("/byAccountId/{accountId}")
-    public ResponseEntity<List<OperationDto>> getOperationsByAccountId(
+    @ResponseStatus(HttpStatus.OK)
+    public List<OperationDto> getOperationsByAccountId(
             @Parameter(description = "Account ID", required = true) @PathVariable("accountId") Long accountId) {
-        return ResponseEntity.ok(operationService.getOperationsByAccountId(accountId));
+        return operationService.getOperationsByAccountId(accountId);
     }
 }

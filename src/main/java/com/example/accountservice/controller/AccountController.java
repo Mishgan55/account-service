@@ -10,7 +10,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,18 +31,20 @@ public class AccountController {
             @Content(mediaType = "application/json", schema = @Schema(implementation = AccountDto.class))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<AccountDto> getAccountInfo(
+    @ResponseStatus(HttpStatus.OK)
+    public AccountDto getAccountInfo(
             @Parameter(description = "Account ID", required = true) @PathVariable Long id) {
-        return ResponseEntity.ok(accountService.getAccountById(id));
+        return accountService.getAccountById(id);
     }
 
     @Operation(summary = "Deposit money to account")
     @ApiResponse(responseCode = "200", description = "Deposit successful")
     @PostMapping("/deposit")
-    public ResponseEntity<String> depositToAccount(
+    @ResponseStatus(HttpStatus.OK)
+    public String depositToAccount(
             @Parameter(description = "Deposit request", required = true) @RequestBody AccountDepositRequest accountDepositRequest) {
         accountService.depositWithRetry(accountDepositRequest);
-        return ResponseEntity.ok(PropertyUtil.DEPOSIT_SUCCESSFUL);
+        return PropertyUtil.DEPOSIT_SUCCESSFUL;
     }
 
     @Operation(summary = "Get all accounts")
@@ -49,54 +52,58 @@ public class AccountController {
             @Content(mediaType = "application/json", schema = @Schema(implementation = AccountDto.class))
     })
     @GetMapping
-    public ResponseEntity<List<AccountDto>> getAllAccounts() {
-        return ResponseEntity.ok(accountService.getAllAccounts());
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountDto> getAllAccounts() {
+        return accountService.getAllAccounts();
     }
 
     @Operation(summary = "Edit account by ID")
     @ApiResponse(responseCode = "200", description = "Edit successful")
     @PatchMapping("/{id}/edit")
-    public ResponseEntity<String> editAccount(
+    @ResponseStatus(HttpStatus.OK)
+    public AccountDto editAccount(
             @Parameter(description = "Account ID", required = true) @PathVariable Long id,
             @Parameter(description = "Account details", required = true) @RequestBody AccountDto accountDto) {
-        accountService.updateAccount(accountDto, id);
-        return ResponseEntity.ok(PropertyUtil.EDIT_SUCCESSFUL);
+        return accountService.updateAccount(accountDto, id);
     }
 
     @Operation(summary = "Delete account by ID")
     @ApiResponse(responseCode = "200", description = "Delete successful")
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteAccount(
+    @ResponseStatus(HttpStatus.OK)
+    public String deleteAccount(
             @Parameter(description = "Account ID", required = true) @PathVariable Long id) {
         accountService.deleteAccount(id);
-        return ResponseEntity.ok(PropertyUtil.DELETE_SUCCESSFUL);
+        return PropertyUtil.DELETE_SUCCESSFUL;
     }
 
     @Operation(summary = "Add new account")
-    @ApiResponse(responseCode = "200", description = "Add successful")
+    @ApiResponse(responseCode = "201", description = "Add successful")
     @PostMapping("/add")
-    public ResponseEntity<String> addAccount(
-            @Parameter(description = "Account details", required = true) @RequestBody AccountDto accountDto) {
-        accountService.createAccount(accountDto);
-        return ResponseEntity.ok(PropertyUtil.ADD_SUCCESSFUL);
+    @ResponseStatus(HttpStatus.CREATED)
+    public AccountDto addAccount(
+            @Parameter(description = "Account details", required = true) @RequestBody @Valid AccountDto accountDto) {
+        return accountService.createAccount(accountDto);
     }
 
     @Operation(summary = "Get accounts by user ID")
     @ApiResponse(responseCode = "200", description = "Successful operation", content = {
             @Content(mediaType = "application/json", schema = @Schema(implementation = AccountDto.class))
     })
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/accountsByUserId/{userId}")
-    public ResponseEntity<List<AccountDto>> getAccountsByUserId(
+    public List<AccountDto> getAccountsByUserId(
             @Parameter(description = "User ID", required = true) @PathVariable Long userId) {
-        return ResponseEntity.ok(accountService.getAccountsByUserId(userId));
+        return accountService.getAccountsByUserId(userId);
     }
 
     @Operation(summary = "Transfer money between accounts")
     @ApiResponse(responseCode = "200", description = "Transfer successful")
     @PostMapping("/transfer")
-    public ResponseEntity<String> transferMoney(
-            @Parameter(description = "Transfer request", required = true) @RequestBody TransferRequestModel model) {
+    @ResponseStatus(HttpStatus.OK)
+    public String transferMoney(
+            @Parameter(description = "Transfer request", required = true) @RequestBody @Valid TransferRequestModel model) {
         accountService.transferMoneyToAnotherUser(model);
-        return ResponseEntity.ok(PropertyUtil.TRANSFER_SUCCESSFUL);
+        return PropertyUtil.TRANSFER_SUCCESSFUL;
     }
 }

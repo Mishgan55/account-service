@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @Getter
@@ -13,5 +13,5 @@ import java.util.Date;
 @ToString
 public class AccountNotFoundException extends RuntimeException {
     private final String message;
-    private final Date date;
+    private final LocalDateTime date;
 }

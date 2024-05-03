@@ -19,15 +19,15 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import org.json.JSONObject;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,23 +39,25 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final OperationService operationService;
+    private final EntityManager entityManager;
 
     public AccountServiceImpl(AccountRepository accountRepository,
-                              AccountMapper accountMapper, OperationService operationService) {
+                              AccountMapper accountMapper, OperationService operationService, EntityManager entityManager) {
         this.accountRepository = accountRepository;
         this.accountMapper = accountMapper;
         this.operationService = operationService;
+        this.entityManager = entityManager;
     }
 
     @Override
     public AccountDto getAccountById(Long id) {
         return accountMapper.toAccountDto(accountRepository
                 .findById(id)
-                .orElseThrow(() -> new AccountNotFoundException(String.format(PropertyUtil.ACCOUNT_NOT_FOUND, id), new Date())));
+                .orElseThrow(() -> new AccountNotFoundException(String.format(PropertyUtil.ACCOUNT_NOT_FOUND, id), LocalDateTime.now())));
     }
 
     @Override
-    @Transactional(isolation = Isolation.SERIALIZABLE, rollbackFor = Exception.class)
+    @Transactional
     public void transferMoneyToAnotherUser(TransferRequestModel transferRequestModel) {
         withDrawFromAccount(transferRequestModel.getFromAccount(), transferRequestModel.getAmount());
         depositToAccountWithOrNotCommission(transferRequestModel);
@@ -68,7 +70,7 @@ public class AccountServiceImpl implements AccountService {
         user.setId(toUserId);
         List<Account> recipientAccounts = accountRepository.findAccountsByUser(user);
         if (recipientAccounts.isEmpty()) {
-            throw new AccountNotFoundException(String.format(PropertyUtil.ACCOUNTS_NOT_FOUND_FOR_USER, toUserId), new Date());
+            throw new AccountNotFoundException(String.format(PropertyUtil.ACCOUNTS_NOT_FOUND_FOR_USER, toUserId), LocalDateTime.now());
         }
 
         Optional<Account> optionalTargetAccount = recipientAccounts.stream()
@@ -103,7 +105,9 @@ public class AccountServiceImpl implements AccountService {
             try {
                 Account account = accountRepository.findById(accountDepositRequest.getAccountId())
                         .orElseThrow(() -> new AccountNotFoundException(String.format(PropertyUtil.ACCOUNT_NOT_FOUND,
-                                accountDepositRequest.getAccountId()), new Date()));
+                                accountDepositRequest.getAccountId()), LocalDateTime.now()));
+
+                entityManager.lock(account, LockModeType.OPTIMISTIC);
 
                 BigDecimal newBalance;
                 if (!accountDepositRequest.getWithCommission()) {
@@ -117,12 +121,8 @@ public class AccountServiceImpl implements AccountService {
 
                 accountRepository.save(account);
                 success = true;
-                Operation operation = new Operation();
-                operation.setAccount(account);
-                operation.setAmount(accountDepositRequest.getAmount());
-                operation.setOperationType(OperationType.DEPOSIT);
-                operation.setTimesTamp(LocalDateTime.now());
-                operationService.createOperation(operation);
+
+                operationService.createOperation(createOperationClass(OperationType.DEPOSIT, account, accountDepositRequest.getAmount()));
             } catch (OptimisticLockingFailureException e) {
                 retries++;
             }
@@ -131,6 +131,15 @@ public class AccountServiceImpl implements AccountService {
         if (!success) {
             throw new AccountUpdateFailedException(String.format(PropertyUtil.FAILED_TO_UPDATE_MESSAGE, retries));
         }
+    }
+
+    private Operation createOperationClass(OperationType operationType, Account account, BigDecimal amount) {
+        Operation operation = new Operation();
+        operation.setAccount(account);
+        operation.setAmount(amount);
+        operation.setOperationType(operationType);
+        operation.setTimesTamp(LocalDateTime.now());
+        return operation;
     }
 
     private BigDecimal convertCurrency(AccountDepositRequest accountDepositRequest) {
@@ -151,26 +160,24 @@ public class AccountServiceImpl implements AccountService {
                 return currencyValueFrom.multiply(amount.multiply(currencyValueTo));
             }
         } catch (UnirestException e) {
-            throw new RuntimeException(e);
+            throw new AccountUpdateFailedException(PropertyUtil.FAILED_TO_CONVERT);
         }
     }
 
     public void withDrawFromAccount(Long accountId, BigDecimal amount) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException(
-                        String.format(PropertyUtil.ACCOUNT_NOT_FOUND, accountId), new Date()));
+                        String.format(PropertyUtil.ACCOUNT_NOT_FOUND, accountId), LocalDateTime.now()));
+
+        entityManager.lock(account, LockModeType.OPTIMISTIC);
+
         if (account.getBalance().compareTo(amount) < 0) {
             throw new AccountUpdateFailedException(String.format(PropertyUtil.NOT_ENOUGH_BALANCE, account.getId()));
         } else {
             account.setBalance(account.getBalance().subtract(amount));
             accountRepository.save(account);
 
-            Operation operation = new Operation();
-            operation.setAccount(account);
-            operation.setAmount(amount);
-            operation.setOperationType(OperationType.WITHDRAWAL);
-            operation.setTimesTamp(LocalDateTime.now());
-            operationService.createOperation(operation);
+            operationService.createOperation(createOperationClass(OperationType.WITHDRAWAL, account, amount));
         }
     }
 
@@ -185,11 +192,12 @@ public class AccountServiceImpl implements AccountService {
 
     @Transactional
     @Override
-    public void updateAccount(AccountDto accountDto, Long id) {
+    public AccountDto updateAccount(AccountDto accountDto, Long id) {
         Account account = accountRepository.findById(id).orElseThrow(
-                () -> new AccountNotFoundException(String.format(PropertyUtil.ACCOUNT_NOT_FOUND, id), new Date()));
+                () -> new AccountNotFoundException(String.format(PropertyUtil.ACCOUNT_NOT_FOUND, id), LocalDateTime.now()));
         account.setBalance(accountDto.getBalance());
         account.setCurrency(accountDto.getCurrency());
+        return accountDto;
     }
 
     @Transactional
@@ -200,8 +208,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Transactional
     @Override
-    public void createAccount(AccountDto accountDto) {
+    public AccountDto createAccount(AccountDto accountDto) {
         accountRepository.save(accountMapper.toAccount(accountDto));
+        return accountDto;
     }
 
     @Override

@@ -11,7 +11,7 @@ import java.util.List;
 @Entity
 @RequiredArgsConstructor
 @Table(name = "accounts")
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode
 public class Account {
     @Id
     @Column(name = "id")

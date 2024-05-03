@@ -8,8 +8,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
+@EqualsAndHashCode
 @Table(name = "operations")
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Operation {
     @Id
     @Column(name = "id")

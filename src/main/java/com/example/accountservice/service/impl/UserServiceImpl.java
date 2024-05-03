@@ -11,7 +11,7 @@ import com.example.accountservice.utill.user.UserNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
         return userRepository
                 .findById(id)
                 .map(userMapper::toUserDto)
-                .orElseThrow(() -> new UserNotFoundException(String.format(PropertyUtil.USER_NOT_FOUND, id), new Date()));
+                .orElseThrow(() -> new UserNotFoundException(String.format(PropertyUtil.USER_NOT_FOUND, id), LocalDateTime.now()));
     }
 
     @Override
@@ -44,9 +44,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void createUser(UserDto userDto) {
+    public UserDto createUser(UserDto userDto) {
         validateUserUniqueness(userDto);
         userRepository.save(userMapper.toUser(userDto));
+        return userDto;
     }
 
     @Override
@@ -57,13 +58,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void updateUser(UserDto userDto, Long id) {
+    public UserDto updateUser(UserDto userDto, Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(String.format(PropertyUtil.USER_NOT_FOUND, id), new Date()));
+                .orElseThrow(() -> new UserNotFoundException(String.format(PropertyUtil.USER_NOT_FOUND, id), LocalDateTime.now()));
 
         user.setName(userDto.getName());
         user.setDocumentNumber(userDto.getDocumentNumber());
         user.setDocumentType(userDto.getDocumentType());
+        return userDto;
     }
 
     private void validateUserUniqueness(UserDto userDto) {
@@ -73,7 +75,7 @@ public class UserServiceImpl implements UserService {
     private void isUserDocumentUnique(UserDto userDto) {
         if (userRepository.findByDocumentNumberAndDocumentType(userDto.getDocumentNumber(), userDto.getDocumentType())
                 .isPresent()) {
-            throw new UserDuplicateDocumentTypeAndNumberException(PropertyUtil.DUPLICATE_USER_DOCUMENT, new Date());
+            throw new UserDuplicateDocumentTypeAndNumberException(PropertyUtil.DUPLICATE_USER_DOCUMENT, LocalDateTime.now());
         }
     }
 }

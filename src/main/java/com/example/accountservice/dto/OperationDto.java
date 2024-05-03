@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @RequiredArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode
 public class OperationDto {
     private Long accountId;
     private OperationType operationType;

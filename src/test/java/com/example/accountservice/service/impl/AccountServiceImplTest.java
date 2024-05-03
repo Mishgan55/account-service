@@ -13,6 +13,7 @@ import com.example.accountservice.service.OperationService;
 import com.example.accountservice.utill.account.AccountNotFoundException;
 import com.example.accountservice.utill.account.AccountUpdateFailedException;
 import com.example.accountservice.utill.enums.Currency;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,7 +30,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -45,6 +45,8 @@ public class AccountServiceImplTest {
 
     @Mock
     private OperationService operationService;
+    @Mock
+    private EntityManager entityManager;
 
     @InjectMocks
     private AccountServiceImpl accountService;
@@ -86,27 +88,27 @@ public class AccountServiceImplTest {
         when(accountRepository.findAccountsByUser(user1)).thenReturn(List.of(account1));
         when(accountRepository.findAccountsByUser(user2)).thenReturn(List.of(account2));
 
-        AccountService accountService = new AccountServiceImpl(accountRepository, null, operationService);
+        AccountService accountService = new AccountServiceImpl(accountRepository, null, operationService, entityManager);
 
-        CountDownLatch latch = new CountDownLatch(2);
 
         Thread thread1 = new Thread(() -> {
             accountService.transferMoneyToAnotherUser(transferRequestModel1);
-            latch.countDown();
         });
         Thread thread2 = new Thread(() -> {
             accountService.transferMoneyToAnotherUser(transferRequestModel2);
-            latch.countDown();
         });
 
         thread1.start();
         thread2.start();
 
         try {
-            latch.await();
+            thread1.join();
+            thread2.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
+
+
         assertEquals(BigDecimal.valueOf(950), account1.getBalance());
         assertEquals(BigDecimal.valueOf(550), account2.getBalance());
     }

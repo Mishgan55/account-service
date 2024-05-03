@@ -8,8 +8,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,9 +28,10 @@ public class UserController {
             @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getUserById(
+    @ResponseStatus(HttpStatus.OK)
+    public UserDto getUserById(
             @Parameter(description = "User ID", required = true) @PathVariable("id") Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+        return userService.getUserById(id);
     }
 
     @Operation(summary = "Get all users")
@@ -38,35 +39,37 @@ public class UserController {
             @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))
     })
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    @ResponseStatus(HttpStatus.OK)
+    public List<UserDto> getAllUsers() {
+        return userService.getAllUsers();
     }
 
     @Operation(summary = "Add a new user")
-    @ApiResponse(responseCode = "200", description = "Successful operation")
+    @ApiResponse(responseCode = "201", description = "Successful operation")
     @PostMapping("/add")
-    public ResponseEntity<String> addUser(
-            @Parameter(description = "User object to be added", required = true) @RequestBody @Validated UserDto userDto) {
-        userService.createUser(userDto);
-        return ResponseEntity.ok(PropertyUtil.ADD_SUCCESSFUL);
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserDto addUser(
+            @Parameter(description = "User object to be added", required = true) @RequestBody @Valid UserDto userDto) {
+        return userService.createUser(userDto);
     }
 
     @Operation(summary = "Delete user by ID")
     @ApiResponse(responseCode = "200", description = "Successful operation")
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUserById(
+    @ResponseStatus(HttpStatus.OK)
+    public String deleteUserById(
             @Parameter(description = "User ID", required = true) @PathVariable("id") Long id) {
         userService.deleteUser(id);
-        return ResponseEntity.ok(PropertyUtil.DELETE_SUCCESSFUL);
+        return PropertyUtil.DELETE_SUCCESSFUL;
     }
 
     @Operation(summary = "Edit user by ID")
     @ApiResponse(responseCode = "200", description = "Successful operation")
     @PatchMapping("/{id}/edit")
-    public ResponseEntity<String> editUser(
+    @ResponseStatus(HttpStatus.OK)
+    public UserDto editUser(
             @Parameter(description = "User ID", required = true) @PathVariable("id") Long id,
-            @Parameter(description = "User object to be edited", required = true) @RequestBody @Validated UserDto userDto) {
-        userService.updateUser(userDto, id);
-        return ResponseEntity.ok(PropertyUtil.EDIT_SUCCESSFUL);
+            @Parameter(description = "User object to be edited", required = true) @RequestBody @Valid UserDto userDto) {
+        return userService.updateUser(userDto, id);
     }
 }
